@@ -56,7 +56,9 @@ public class TransactionManager {
             if (newValue == null) {
                 // Key was deleted in the transaction, restore it
                 database.getDataStore().put(key, previousValue);
-                database.incrementValueCount(previousValue);
+                if (previousValue != null) {
+                    database.incrementValueCount(previousValue);
+                }
             } else {
                 // Key was updated or added in the transaction, revert it
                 if (previousValue == null) {
@@ -66,8 +68,8 @@ public class TransactionManager {
                 } else {
                     // Key was updated, revert to the previous value
                     database.getDataStore().put(key, previousValue);
-                    database.decrementValueCount(newValue);
-                    database.incrementValueCount(previousValue);
+                    //database.decrementValueCount(newValue);
+                    //database.incrementValueCount(previousValue);
                 }
             }
         });
