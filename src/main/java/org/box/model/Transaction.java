@@ -15,23 +15,17 @@ public class Transaction {
     }
 
     public void setLocalChange(String key, String newValue, String previousValue) {
+        // Track the change for rollback
         localChanges.put(key, newValue);
+
+        // Only store the original value once, during the first change
         if (!previousValues.containsKey(key)) {
-            previousValues.put(key, previousValue); // Store the original value only once
+            previousValues.put(key, previousValue);
         }
 
-        // Adjust local value counts for the new value
-        if (newValue != null) {
-            localValueCount.put(newValue, localValueCount.getOrDefault(newValue, 0) + 1);
-        }
-
-        // Adjust local value counts for the previous value (decrement or remove)
-        if (previousValue != null) {
-            localValueCount.put(previousValue, localValueCount.getOrDefault(previousValue, 0) - 1);
-            if (localValueCount.get(previousValue) == 0) {
-                localValueCount.remove(previousValue);
-            }
-        }
+        // Update local value counts
+        updateValueCount(newValue, 1);  // Increment count for the new value
+        updateValueCount(previousValue, -1); // Decrement count for the previous value
     }
 
     public Map<String, String> getLocalChanges() {
@@ -44,5 +38,15 @@ public class Transaction {
 
     public int getLocalValueCount(String value) {
         return localValueCount.getOrDefault(value, 0);
+    }
+
+    private void updateValueCount(String value, int delta) {
+        if (value == null) return; // No adjustment needed for null values
+        int updatedCount = localValueCount.getOrDefault(value, 0) + delta;
+        if (updatedCount > 0) {
+            localValueCount.put(value, updatedCount);
+        } else {
+            localValueCount.remove(value); // Remove the entry if count drops to zero
+        }
     }
 }
